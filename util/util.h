@@ -1,18 +1,21 @@
-/** 
+/**
  * @Author: Wang Haitao
- * @Date: 2022-02-20 22:16:29
- * @LastEditTime: 2022-02-20 22:56:26
+ * @Date: 2022-02-20 23:00:21
+ * @LastEditTime: 2022-02-21 10:43:04
  * @LastEditors: Wang Haitao
- * @FilePath: /edelta/edelta.h
- * @Description: Github:https://github.com/apple-ouyang 
+ * @FilePath: /edelta/util.h
+ * @Description: Github:https://github.com/apple-ouyang
  * @ Gitee:https://gitee.com/apple-ouyang
  */
 #pragma once
-
 #include <cstdint>
-
 #include "htable.h"
-#include "parameters.h"
+
+#define STRMIN 12
+#define STRMAX 64
+#define STRAVG 28
+
+#define PREDEFINED_GEAR_MATRIX
 
 typedef struct       
 {
@@ -48,10 +51,14 @@ typedef struct        /* the least write or read unit of disk */
 	/* the first bit for the flag, the other 31 bits for the length */
 }DeltaUnit2; 
 
-int eDelta_Encode( uint8_t* newBuf, uint32_t newSize,
-		  				uint8_t* baseBuf, uint32_t baseSize,
-		  				uint8_t* deltaBuf, uint32_t *deltaSize );	
-    
-int dDelta_Decode(uint8_t *deltaBuf, uint32_t deltaSize,
-                  uint8_t *baseBuf, uint32_t baseSize,
-                  uint8_t *outBuf, uint32_t *outSize);
+uint64_t weakHash(unsigned char *buf, int len);
+
+int chunk_gear(unsigned char *p, int n);
+
+int rolling_gear_v3(unsigned char *p, int n, int num_of_chunks, int *cut);
+
+#ifndef PREDEFINED_GEAR_MATRIX
+void InitGearMatrix();
+#else
+extern uint32_t GEAR[256];
+#endif

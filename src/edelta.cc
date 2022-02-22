@@ -7,35 +7,63 @@
  * @Description: Github:https://github.com/apple-ouyang
  * @ Gitee:https://gitee.com/apple-ouyang
  */
-#include <cstring>
+#include <cstdio>
+#include <cstdint>
 #include <cstdlib>
+#include <cstring>
 
-#include "edelta.h"
-#include "chunking.h"
+#include "src/edelta.h"
+#include "util/util.h"
 
 /* flag=0 for 'D', 1 for 'S' */
 void set_flag(void *record, uint32_t flag) {
-    uint32_t *flag_length = (uint32_t *) record;
-    if (flag == 0) {
-        (*flag_length) &= ~(uint32_t) 0 >> 1;
-    } else {
-        (*flag_length) |= (uint32_t) 1 << 31;
-    }
+  uint32_t *flag_length = (uint32_t *)record;
+  if (flag == 0) {
+    (*flag_length) &= ~(uint32_t)0 >> 1;
+  } else {
+    (*flag_length) |= (uint32_t)1 << 31;
+  }
+}
+
+/* return 0 if flag=0, >0(not 1) if flag=1 */
+u_int32_t get_flag(void *record) {
+  u_int32_t *flag_length = (u_int32_t *)record;
+  return (*flag_length) & (u_int32_t)1 << 31;
 }
 
 void set_length(void *record, uint32_t length) {
-    uint32_t *flag_length = (uint32_t *) record;
-    uint32_t musk = (*flag_length) & (uint32_t) 1 << 31;
-    *flag_length = length | musk;
+  uint32_t *flag_length = (uint32_t *)record;
+  uint32_t musk = (*flag_length) & (uint32_t)1 << 31;
+  *flag_length = length | musk;
 }
 
 uint32_t get_length(void *record) {
-    uint32_t *flag_length = (uint32_t *) record;
-    return (*flag_length) & ~(uint32_t) 0 >> 1;
+  uint32_t *flag_length = (uint32_t *)record;
+  return (*flag_length) & ~(uint32_t)0 >> 1;
 }
 
+int Chunking_v3(unsigned char *data, int len, int num_of_chunks,
+                DeltaRecord *subChunkLink) {
+  int i = 0, *cut;
+  /* cut is the chunking points in the stream */
+  cut = (int *)malloc((num_of_chunks + 1) * sizeof(int));
+  int numBytes =
+      rolling_gear_v3(data, len, num_of_chunks, cut); //分割给定快的总字节数
 
-int eDelta_Encode(uint8_t *newBuf, uint32_t newSize, uint8_t *baseBuf,
+  while (i < num_of_chunks) {
+    int chunkLen = cut[i + 1] - cut[i];
+    subChunkLink[i].nLength = chunkLen;
+    subChunkLink[i].nOffset = cut[i]; /**/
+    subChunkLink[i].DupFlag = 0;
+    subChunkLink[i].nHash = weakHash(data + cut[i], chunkLen);
+    //	SpookyHash::Hash64(data+ cut[i], chunkLen, 0x1af1);
+    i++;
+  }
+  free(cut);
+  return numBytes;
+}
+
+int EDeltaEncode(uint8_t *newBuf, uint32_t newSize, uint8_t *baseBuf,
                   uint32_t baseSize, uint8_t *deltaBuf, uint32_t *deltaSize) {
   /* detect the head and tail of one chunk */
   int beg = 0, end = 0, begSize = 0, endSize = 0;
@@ -221,16 +249,16 @@ int eDelta_Encode(uint8_t *newBuf, uint32_t newSize, uint8_t *baseBuf,
               InputLink[j].nLength = cursor_input1 - cursor_input2;
               InputLink[j].nHash =
                   weakHash(newBuf + cursor_input2, InputLink[j].nLength);
-              if (psDupSubCnk = (DeltaRecord *)psHTable->lookup(
-                      (unsigned char *)&(InputLink[j].nHash))) {
+              if ((psDupSubCnk = (DeltaRecord *)psHTable->lookup(
+                       (unsigned char *)&(InputLink[j].nHash)))) {
                 probe_match = j;
                 goto lets_break;
               }
             }
           } else {
             for (int j = 0; j < INPUT_TRY; j++) {
-              if (psDupSubCnk = (DeltaRecord *)psHTable->lookup(
-                      (unsigned char *)&(InputLink[j].nHash))) {
+              if ((psDupSubCnk = (DeltaRecord *)psHTable->lookup(
+                       (unsigned char *)&(InputLink[j].nHash)))) {
                 //printf("find INPUT_TRY: %d BASE_STEP: %d" \
 								//	" cursor_input: %d round of chunk: %d\n",
                 //	j,i,cursor_input,test);
@@ -253,7 +281,7 @@ int eDelta_Encode(uint8_t *newBuf, uint32_t newSize, uint8_t *baseBuf,
       }
     }
 
-#if 1 // to handle the chunks in input file for probing
+    // to handle the chunks in input file for probing
     if (flag_handle_probe) {
       for (int i = 0; i < INPUT_TRY; i++) {
         matchsum++;
@@ -290,7 +318,6 @@ int eDelta_Encode(uint8_t *newBuf, uint32_t newSize, uint8_t *baseBuf,
 
       flag_handle_probe = 0;
     }
-#endif
 
     cursor_input =
         chunk_gear(newBuf + inputPos, newSize - inputPos - endSize) + inputPos;
@@ -299,7 +326,8 @@ int eDelta_Encode(uint8_t *newBuf, uint32_t newSize, uint8_t *baseBuf,
     hash = weakHash(newBuf + inputPos, length);
 
     /* lookup */
-    if (psDupSubCnk = (DeltaRecord *)psHTable->lookup((unsigned char *)&hash)) {
+    if ((psDupSubCnk =
+             (DeltaRecord *)psHTable->lookup((unsigned char *)&hash))) {
     // printf("inputPos: %d length: %d\n", inputPos, length);
     match:
       if (length == psDupSubCnk->nLength &&
@@ -423,160 +451,6 @@ int eDelta_Encode(uint8_t *newBuf, uint32_t newSize, uint8_t *baseBuf,
     deltaLen += sizeof(DeltaUnit1);
   }
 
-#if GO_BACK_TO_GREEDY
-  /* if edelta doesn't work, let's go back to greedy */
-  if (deltaLen > newSize * RECOMPRESS_THRESHOLD) {
-    printf("go back to greedy!!!!!!\n\n");
-    return dDelta_Encode_Greedy_v2((uint8_t *)newBuf, newSize,
-                                   (uint8_t *)baseBuf, baseSize,
-                                   (uint8_t *)deltaBuf, deltaSize);
-  }
-#endif
-
-#if 0
-                                                                                                                            /* if the first round of compression doesn't work well, let's go for a second round */
-	if(deltaLen > newSize * RECOMPRESS_THRESHOLD){
-		printf("compress for second round!!!!!!\n\n");
-		deltaLen = 0;
-		cursor_input = begSize;
-	    inputPos = begSize;
-		flag=0;
-
-		if(beg){
-			record1.nOffset=0;
-			set_length(&record1, begSize);
-			memcpy( deltaBuf + deltaLen, &record1, sizeof(DeltaUnit1) );
-			deltaLen += sizeof(DeltaUnit1);
-			flag=1;
-		}
-
-		while( inputPos < newSize-endSize ){
-			cursor_input=chunk_gear(newBuf+inputPos,newSize-inputPos-endSize)+inputPos;
-
-			length=cursor_input-inputPos;
-			hash=weakHash(newBuf+inputPos,length);
-
-			/* lookup */
-			if( psDupSubCnk=(DeltaRecord *)psHTable->lookup( (unsigned char*)&hash ) ){
-				//printf("inputPos: %d length: %d\n", inputPos, length);
-				if( length== psDupSubCnk->nLength &&
-							memcmp( newBuf + inputPos,
-									baseBuf + psDupSubCnk->nOffset,
-									length)==0){
-					if(flag == 2){
-						/* continuous unique chunks only add unique bytes into the deltaBuf,
-					 	* but not change the last DeltaUnit2, so the DeltaUnit2 should be
-					 	* overwritten when flag=1 or at the end of the loop.
-					 	*/
-						memcpy(deltaBuf+deltaLen-get_length(&record2)-sizeof(DeltaUnit2),
-							&record2, sizeof(DeltaUnit2));
-					}
-
-					//greedily detect forward
-					int j=0;
-
-					while( psDupSubCnk->nOffset+length+j+7 < baseSize-endSize &&
-						cursor_input+j+7 < newSize-endSize ){
-						if( *(uint64_t *)(baseBuf+psDupSubCnk->nOffset+length+j)  == \
-							*(uint64_t *)(newBuf+cursor_input+j) ){
-						    j+=8;
-						}
-						else
-							break;
-					}
-					while( psDupSubCnk->nOffset+length+j < baseSize-endSize &&
-						cursor_input+j < newSize-endSize ){
-						if(baseBuf[psDupSubCnk->nOffset+length+j] == newBuf[cursor_input+j]){
-						    j++;
-						}
-						else
-							break;
-					}
-
-					cursor_input+=j;
-
-					set_length(&record1, cursor_input-inputPos);
-					record1.nOffset = psDupSubCnk->nOffset;
-
-					/* detect backward */
-					int k=0;
-					if(flag == 2){
-						while(k+1 <= psDupSubCnk->nOffset && k+1 <= get_length(&record2)){
-							if(baseBuf[psDupSubCnk->nOffset-(k+1)] == newBuf[inputPos-(k+1)])
-								k++;
-							else
-								break;
-						}
-					}
-					if(k>0){
-						deltaLen-=get_length(&record2);
-						deltaLen-=sizeof(DeltaUnit2);
-
-						set_length(&record2, get_length(&record2)-k);
-
-						if(get_length(&record2) > 0){
-							memcpy( deltaBuf + deltaLen, &record2, sizeof(DeltaUnit2) );
-							deltaLen += sizeof(DeltaUnit2);
-							deltaLen += get_length(&record2);
-						}
-
-						set_length(&record1, get_length(&record1)+k);
-						record1.nOffset -= k;
-					}
-
-					memcpy( deltaBuf + deltaLen, &record1, sizeof(DeltaUnit1) );
-					deltaLen += sizeof(DeltaUnit1);
-					flag=1;
-				}
-				else{
-					printf("Spooky Hash Error!!!!!!!!!!!!!!!!!!\n");
-					goto handle_hash_error2;
-				}
-			}
-			else{
-handle_hash_error2:
-				if(flag==2){
-					/* continuous unique chunks only add unique bytes into the deltaBuf,
-					 * but not change the last DeltaUnit2, so the DeltaUnit2 should be
-					 * overwritten when flag=1 or at the end of the loop.
-					 */
-					memcpy( deltaBuf + deltaLen, newBuf + inputPos, length);
-					deltaLen += length;
-					set_length(&record2, get_length(&record2)+length);
-				}else{
-					set_length(&record2, length);
-
-					memcpy( deltaBuf + deltaLen, &record2, sizeof(DeltaUnit2) );
-					deltaLen += sizeof(DeltaUnit2);
-
-					memcpy( deltaBuf + deltaLen, newBuf + inputPos, length);
-					deltaLen += length;
-
-					flag=2;
-				}
-			}
-
-			inputPos=cursor_input;
-		}
-
-		if(flag == 2){
-			/* continuous unique chunks only add unique bytes into the deltaBuf,
-			* but not change the last DeltaUnit2, so the DeltaUnit2 should be overwritten
-			* when flag=1 or at the end of the loop.
-			*/
-			memcpy(deltaBuf+deltaLen-get_length(&record2)-sizeof(DeltaUnit2),
-				&record2, sizeof(DeltaUnit2));
-		}
-
-		if(end){
-			record1.nOffset=baseSize-endSize;
-			set_length(&record1, endSize);
-			memcpy( deltaBuf + deltaLen, &record1, sizeof(DeltaUnit1) );
-			deltaLen += sizeof(DeltaUnit1);
-		}
-	}
-#endif
-  // printf("match:%.2f\n",match/matchsum);
   if (psHTable) {
     free(psHTable->table);
     free(psHTable);
@@ -588,5 +462,43 @@ handle_hash_error2:
   return deltaLen;
 }
 
-int dDelta_Decode(uint8_t *deltaBuf, uint32_t deltaSize, uint8_t *baseBuf,
-                  uint32_t baseSize, uint8_t *outBuf, uint32_t *outSize) {}
+int EDeltaDecode(uint8_t *deltaBuf, uint32_t deltaSize, uint8_t *baseBuf,
+                  uint32_t baseSize, uint8_t *outBuf, uint32_t *outSize) {
+
+  int dataLength = 0, readLength = 0;
+  int matchnum = 0;
+  int matchlength = 0;
+  int unmatchlength = 0;
+  int unmatchnum = 0;
+  while (1) {
+    u_int32_t flag = get_flag(deltaBuf + readLength);
+
+    if (flag == 0) {
+      matchnum++;
+      DeltaUnit1 record;
+      memcpy(&record, deltaBuf + readLength, sizeof(DeltaUnit1));
+      readLength += sizeof(DeltaUnit1);
+      matchlength += get_length(&record);
+      memcpy(outBuf + dataLength, baseBuf + record.nOffset,
+             get_length(&record));
+
+      dataLength += get_length(&record);
+    } else {
+      unmatchnum++;
+      DeltaUnit2 record;
+      memcpy(&record, deltaBuf + readLength, sizeof(DeltaUnit2));
+      readLength += sizeof(DeltaUnit2);
+      unmatchlength += get_length(&record);
+      memcpy(outBuf + dataLength, deltaBuf + readLength, get_length(&record));
+
+      readLength += get_length(&record);
+      dataLength += get_length(&record);
+    }
+
+    if (readLength >= deltaSize) {
+      break;
+    }
+  }
+  *outSize = dataLength;
+  return dataLength;
+}

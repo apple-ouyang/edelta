@@ -8,8 +8,9 @@
 #include <cstdlib>
 #include <cmath>
 
-#include "htable.h"
-#include "edelta.h"
+#include "util/htable.h"
+#include "util/util.h"
+// #include "edelta.h"
 /*
  * Take each hash link and walk down the chain of items
  *  that hash there counting them (i.e. the hits), 
