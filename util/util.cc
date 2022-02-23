@@ -10,9 +10,9 @@
 #include <cstdio>
 #include <cstring>
 
-#include "util/md5.h"
-#include "util/util.h"
-#include "util/xxhash.h"
+#include "md5.h"
+#include "util.h"
+#include "xxhash.h"
 
 uint64_t weakHash(unsigned char *buf, int len) {
   return XXH64(buf, len, 0x7fcaf1);

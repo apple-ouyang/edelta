@@ -1,9 +1,9 @@
 /** 
  * @Author: Wang Haitao
  * @Date: 2022-02-20 22:16:29
- * @LastEditTime: 2022-02-22 16:11:34
+ * @LastEditTime: 2022-02-23 16:48:22
  * @LastEditors: Wang Haitao
- * @FilePath: /edelta/src/edelta.h
+ * @FilePath: /titan/third-party/edelta/src/edelta.h
  * @Description: Github:https://github.com/apple-ouyang 
  * @ Gitee:https://gitee.com/apple-ouyang
  */
@@ -11,8 +11,8 @@
 
 #include <cstdint>
 
-#include "util/htable.h"
-#include "util/util.h"
+#include "htable.h"
+#include "util.h"
 
 // Attention! input should not be empty! base should not be empty!
 int EDeltaEncode( uint8_t* input, uint32_t input_size,

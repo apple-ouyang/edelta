@@ -77,7 +77,7 @@ public:
    void init(int offset,int nhlen, int tsize = 31);
    bool  insert(unsigned char *key, void *item);
    void *lookup(unsigned char *key);
-   void *lookup_fix(unsigned char *key,unsigned char* New ,unsigned char* Base,int baselength,int newlength);
+   void *lookup_fix(unsigned char *key,unsigned char* New ,unsigned char* Base,uint32_t baselength,uint32_t newlength);
    bool insert1(unsigned char *key, void *item,float pos);
    void *lookup1(unsigned char *key,float pos);
    void *search(unsigned char *key);

@@ -7,13 +7,13 @@
  * @Description: Github:https://github.com/apple-ouyang
  * @ Gitee:https://gitee.com/apple-ouyang
  */
-#include <cstdio>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
-#include "src/edelta.h"
-#include "util/util.h"
+#include "edelta.h"
+#include "util.h"
 
 /* flag=0 for 'D', 1 for 'S' */
 void set_flag(void *record, uint32_t flag) {
@@ -64,9 +64,9 @@ int Chunking_v3(unsigned char *data, int len, int num_of_chunks,
 }
 
 int EDeltaEncode(uint8_t *newBuf, uint32_t newSize, uint8_t *baseBuf,
-                  uint32_t baseSize, uint8_t *deltaBuf, uint32_t *deltaSize) {
+                 uint32_t baseSize, uint8_t *deltaBuf, uint32_t *deltaSize) {
   /* detect the head and tail of one chunk */
-  int beg = 0, end = 0, begSize = 0, endSize = 0;
+  uint32_t beg = 0, end = 0, begSize = 0, endSize = 0;
   float matchsum = 0;
   float match = 0;
   while (begSize + 7 < baseSize && begSize + 7 < newSize) {
@@ -142,13 +142,13 @@ int EDeltaEncode(uint8_t *newBuf, uint32_t newSize, uint8_t *baseBuf,
   }
 
   uint32_t deltaLen = 0;
-  int cursor_base = begSize;
-  int cursor_input = begSize;
-  int cursor_input1 = 0;
-  int cursor_input2 = 0;
-  int input_last_chunk_beg = begSize;
-  int inputPos = begSize;
-  int length;
+  uint32_t cursor_base = begSize;
+  uint32_t cursor_input = begSize;
+  uint32_t cursor_input1 = 0;
+  uint32_t cursor_input2 = 0;
+  uint32_t input_last_chunk_beg = begSize;
+  uint32_t inputPos = begSize;
+  uint32_t length;
   uint64_t hash;
   DeltaRecord *psDupSubCnk = NULL;
   DeltaUnit1 record1;
@@ -259,7 +259,7 @@ int EDeltaEncode(uint8_t *newBuf, uint32_t newSize, uint8_t *baseBuf,
             for (int j = 0; j < INPUT_TRY; j++) {
               if ((psDupSubCnk = (DeltaRecord *)psHTable->lookup(
                        (unsigned char *)&(InputLink[j].nHash)))) {
-                //printf("find INPUT_TRY: %d BASE_STEP: %d" \
+                //printf("find INPUT_TRY: %d BASE_STEP: %d" 
 								//	" cursor_input: %d round of chunk: %d\n",
                 //	j,i,cursor_input,test);
                 probe_match = j;
@@ -373,7 +373,7 @@ int EDeltaEncode(uint8_t *newBuf, uint32_t newSize, uint8_t *baseBuf,
         record1.nOffset = psDupSubCnk->nOffset;
 
         /* detect backward */
-        int k = 0;
+        uint32_t k = 0;
         if (flag == 2) {
           while (k + 1 <= psDupSubCnk->nOffset &&
                  k + 1 <= get_length(&record2)) {
@@ -463,9 +463,9 @@ int EDeltaEncode(uint8_t *newBuf, uint32_t newSize, uint8_t *baseBuf,
 }
 
 int EDeltaDecode(uint8_t *deltaBuf, uint32_t deltaSize, uint8_t *baseBuf,
-                  uint32_t baseSize, uint8_t *outBuf, uint32_t *outSize) {
+                 uint32_t baseSize, uint8_t *outBuf, uint32_t *outSize) {
 
-  int dataLength = 0, readLength = 0;
+  uint32_t dataLength = 0, readLength = 0;
   int matchnum = 0;
   int matchlength = 0;
   int unmatchlength = 0;

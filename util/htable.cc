@@ -8,8 +8,8 @@
 #include <cstdlib>
 #include <cmath>
 
-#include "util/htable.h"
-#include "util/util.h"
+#include "htable.h"
+#include "util.h"
 // #include "edelta.h"
 /*
  * Take each hash link and walk down the chain of items
@@ -287,12 +287,12 @@ void *htable::lookup(unsigned char *key)
 
 
 #define SESIZE 10
-void *htable::lookup_fix(unsigned char *key, unsigned char *New, unsigned char *Base,int baselength,int newlength)
+void *htable::lookup_fix(unsigned char *key, unsigned char *New, unsigned char *Base,uint32_t baselength,uint32_t newlength)
 {
 
     index = (*(uint64_t*) key* 2654435761U) & mask;
     int count=0;
-    int bestnum =0;
+    uint32_t bestnum =0;
     hlink* best =NULL;
     int time =0;
     for (hlink *hp=table[index]; hp && count<SESIZE  && time <800; hp=(hlink *)hp->next,time++)
@@ -303,7 +303,7 @@ void *htable::lookup_fix(unsigned char *key, unsigned char *New, unsigned char *
             if(memcmp( New ,Base + ((DeltaRecord *)(((char *)hp)-loffset))->nOffset,STRLOOK)==0 )
             {
 
-                int j=STRLOOK;
+                uint32_t j=STRLOOK;
                 while( ((DeltaRecord *)(((char *)hp)-loffset))->nOffset+STRLOOK+j < baselength &&
                         STRLOOK+j < newlength )
                 {
