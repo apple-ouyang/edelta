@@ -1,13 +1,14 @@
 /** 
  * @Author: Wang Haitao
  * @Date: 2022-02-20 22:16:29
- * @LastEditTime: 2022-02-23 16:48:22
+ * @LastEditTime: 2022-03-10 09:28:45
  * @LastEditors: Wang Haitao
  * @FilePath: /titan/third-party/edelta/src/edelta.h
  * @Description: Github:https://github.com/apple-ouyang 
  * @ Gitee:https://gitee.com/apple-ouyang
  */
-#pragma once
+#ifndef _EDELTA_H
+#define _EDELTA_H
 
 #include <cstdint>
 
@@ -22,3 +23,5 @@ int EDeltaEncode( uint8_t* input, uint32_t input_size,
 int EDeltaDecode(uint8_t *delta, uint32_t delta_size,
                   uint8_t *base, uint32_t base_size,
                   uint8_t *output, uint32_t *output_size);
+            
+#endif // _EDELTA_H
