@@ -467,8 +467,8 @@ int EDeltaDecode(uint8_t *deltaBuf, uint32_t deltaSize, uint8_t *baseBuf,
 
   uint32_t dataLength = 0, readLength = 0;
   int matchnum = 0;
-  int matchlength = 0;
-  int unmatchlength = 0;
+  // int matchlength = 0;
+  // int unmatchlength = 0;
   int unmatchnum = 0;
   while (1) {
     u_int32_t flag = get_flag(deltaBuf + readLength);
@@ -478,7 +478,7 @@ int EDeltaDecode(uint8_t *deltaBuf, uint32_t deltaSize, uint8_t *baseBuf,
       DeltaUnit1 record;
       memcpy(&record, deltaBuf + readLength, sizeof(DeltaUnit1));
       readLength += sizeof(DeltaUnit1);
-      matchlength += get_length(&record);
+      // matchlength += get_length(&record);
       memcpy(outBuf + dataLength, baseBuf + record.nOffset,
              get_length(&record));
 
@@ -488,7 +488,7 @@ int EDeltaDecode(uint8_t *deltaBuf, uint32_t deltaSize, uint8_t *baseBuf,
       DeltaUnit2 record;
       memcpy(&record, deltaBuf + readLength, sizeof(DeltaUnit2));
       readLength += sizeof(DeltaUnit2);
-      unmatchlength += get_length(&record);
+      // unmatchlength += get_length(&record);
       memcpy(outBuf + dataLength, deltaBuf + readLength, get_length(&record));
 
       readLength += get_length(&record);
