@@ -1,12 +1,3 @@
-/**
- * @Author: Wang Haitao
- * @Date: 2022-02-20 23:00:21
- * @LastEditTime: 2022-02-21 10:43:04
- * @LastEditors: Wang Haitao
- * @FilePath: /edelta/util.h
- * @Description: Github:https://github.com/apple-ouyang
- * @ Gitee:https://gitee.com/apple-ouyang
- */
 #pragma once
 #include <cstdint>
 #include "htable.h"

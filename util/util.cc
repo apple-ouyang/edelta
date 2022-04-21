@@ -1,12 +1,3 @@
-/**
- * @Author: Wang Haitao
- * @Date: 2022-02-20 23:00:14
- * @LastEditTime: 2022-02-21 10:28:06
- * @LastEditors: Wang Haitao
- * @FilePath: /edelta/util.cpp
- * @Description: Github:https://github.com/apple-ouyang
- * @ Gitee:https://gitee.com/apple-ouyang
- */
 #include <cstdio>
 #include <cstring>
 

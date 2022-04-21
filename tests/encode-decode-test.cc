@@ -1,13 +1,3 @@
-/** 
- * @Author: Wang Haitao
- * @Date: 2022-02-21 15:01:35
- * @LastEditTime: 2022-02-21 19:47:16
- * @LastEditors: Wang Haitao
- * @FilePath: /edelta/encode-decode-test.cpp
- * @Description: Github:https://github.com/apple-ouyang 
- * @ Gitee:https://gitee.com/apple-ouyang
- */
-
 #include "edelta.h"
 #include "boost/filesystem.hpp"
 #include <iterator>

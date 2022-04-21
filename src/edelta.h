@@ -1,12 +1,3 @@
-/** 
- * @Author: Wang Haitao
- * @Date: 2022-02-20 22:16:29
- * @LastEditTime: 2022-03-10 09:28:45
- * @LastEditors: Wang Haitao
- * @FilePath: /titan/third-party/edelta/src/edelta.h
- * @Description: Github:https://github.com/apple-ouyang 
- * @ Gitee:https://gitee.com/apple-ouyang
- */
 #ifndef _EDELTA_H
 #define _EDELTA_H
 
