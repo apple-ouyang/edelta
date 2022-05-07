@@ -142,8 +142,8 @@ int EDeltaEncode(uint8_t *newBuf, uint32_t newSize, uint8_t *baseBuf,
   uint32_t length;
   uint64_t hash;
   DeltaRecord *psDupSubCnk = NULL;
-  DeltaUnit1 record1;
-  DeltaUnit2 record2;
+  DeltaUnit1 record1{0, 0};
+  DeltaUnit2 record2{0};
   set_flag(&record1, 0);
   set_flag(&record2, 1);
   int flag = 0; /* to represent the last record in the deltaBuf,
